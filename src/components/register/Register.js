@@ -2,7 +2,6 @@ import React from "react";
 import styled from "styled-components";
 import { BaseContainer } from "../../helpers/layout";
 import { getDomain } from "../../helpers/getDomain";
-import User from "../shared/models/User";
 import { withRouter } from "react-router-dom";
 import { Button } from "../../views/design/Button";
 
@@ -83,6 +82,7 @@ class Register extends React.Component {
     this.state = {
       name: null,
       username: null,
+      birthday: null,
       password: null
     };
   }
@@ -90,6 +90,11 @@ class Register extends React.Component {
    * HTTP POST request is sent to the backend.
    * If the request is successful, a new user is returned to the front-end and its token is stored in the localStorage.
    */
+  goBack(){
+    this.props.history.push("/login")
+  }
+
+
   register() {
     fetch(`${getDomain()}/users`, {
       method: "POST",
@@ -99,16 +104,22 @@ class Register extends React.Component {
       body: JSON.stringify({
         name: this.state.name,
         username: this.state.username,
+        birthday: this.state.birthday,
         password: this.state.password
       })
     })
-      .then(response => response.json())
-      .then(returnedUser => {
-        const user = new User(returnedUser);
-        // store the token into thae local storage
-        localStorage.setItem("token", user.token);
-        // user login successfully worked --> navigate to the route /game in the GameRouter
-        this.props.history.push(`/login`);
+      .then(async response => {
+        if (!response.ok){
+          const err = await response.json();
+          alert(err.message);
+          this.setState({ name: "" });
+          this.setState({ username: "" });
+          this.setState({ birthday: "" });
+          this.setState({ password: "" });
+        }
+        else{
+          this.props.history.push("/login");
+        }
       })
       .catch(err => {
         if (err.message.match(/Failed to fetch/)) {
@@ -143,7 +154,7 @@ class Register extends React.Component {
     return (
       <BaseContainer>
         <FormContainer>
-          <Form style={{height: "500px"}}>
+          <Form style={{height: "560px"}}>
             <Title>Create A New User</Title>
             <Label>Name</Label>
             <InputField
@@ -159,6 +170,14 @@ class Register extends React.Component {
                 this.handleInputChange("username", e.target.value);
               }}
             />
+            <Label>Birthday</Label>
+            <InputField
+                type="date"
+                placeholder="Enter here.."
+                onChange={e => {
+                  this.handleInputChange("birthday", e.target.value);
+                }}
+            />
             <Label>Password</Label>
             <InputField
               type="password"
@@ -170,7 +189,7 @@ class Register extends React.Component {
             <ButtonContainer>
               <Button
                 color="sky"
-                disabled={!this.state.username || !this.state.name || !this.state.password}
+                disabled={!this.state.username || !this.state.name ||!this.state.birthday|| !this.state.password}
                 width="100%"
                 onClick={() => {
                   this.register();
@@ -183,7 +202,7 @@ class Register extends React.Component {
               <Button
                 width="100%"
                 onClick={() => {
-                  this.home();
+                  this.goBack();
                 }}
               >
                 Already have an account?

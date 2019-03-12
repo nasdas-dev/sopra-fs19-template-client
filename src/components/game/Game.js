@@ -32,6 +32,10 @@ class Game extends React.Component {
     };
   }
 
+  showUser(id) {
+    this.props.history.push(`/users/${id}`);
+  }
+
   logout() {
     localStorage.removeItem("token");
     this.props.history.push("/login");
@@ -71,8 +75,13 @@ class Game extends React.Component {
             <Users>
               {this.state.users.map(user => {
                 return (
-                  <PlayerContainer key={user.id}>
-                    <Player user={user} />
+                  <PlayerContainer
+                      key={user.id}
+                      onClick={() => {
+                        this.showUser(user.id);
+                      }}
+                  >
+                    <Player user={user}/>
                   </PlayerContainer>
                 );
               })}
