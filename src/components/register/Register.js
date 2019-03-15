@@ -1,9 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { BaseContainer } from "../../helpers/layout";
-import { getDomain } from "../../helpers/getDomain";
-import { withRouter } from "react-router-dom";
-import { Button } from "../../views/design/Button";
+import {BaseContainer} from "../../helpers/layout";
+import {getDomain} from "../../helpers/getDomain";
+import {withRouter} from "react-router-dom";
+import {Button} from "../../views/design/Button";
 
 const FormContainer = styled.div`
   margin-top: 2em;
@@ -71,148 +71,158 @@ const ButtonContainer = styled.div`
  * @Class
  */
 class Register extends React.Component {
-  /**
-   * If you don’t initialize the state and you don’t bind methods, you don’t need to implement a constructor for your React component.
-   * The constructor for a React component is called before it is mounted (rendered).
-   * In this case the initial state is defined in the constructor. The state is a JS object containing two fields: name and username
-   * These fields are then handled in the onChange() methods in the resp. InputFields
-   */
-  constructor() {
-    super();
-    this.state = {
-      name: null,
-      username: null,
-      birthday: null,
-      password: null
-    };
-  }
-  /**
-   * HTTP POST request is sent to the backend.
-   * If the request is successful, a new user is returned to the front-end and its token is stored in the localStorage.
-   */
-  goBack(){
-    this.props.history.push("/login")
-  }
+    /**
+     * If you don’t initialize the state and you don’t bind methods, you don’t need to implement a constructor for your React component.
+     * The constructor for a React component is called before it is mounted (rendered).
+     * In this case the initial state is defined in the constructor. The state is a JS object containing two fields: name and username
+     * These fields are then handled in the onChange() methods in the resp. InputFields
+     */
+    constructor() {
+        super();
+        this.state = {
+            name: null,
+            username: null,
+            birthday: null,
+            password: null
+        };
+    }
+
+    /**
+     * HTTP POST request is sent to the backend.
+     * If the request is successful, a new user is returned to the front-end and its token is stored in the localStorage.
+     */
+    goBack() {
+        this.props.history.push("/login")
+    }
 
 
-  register() {
-    fetch(`${getDomain()}/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: this.state.name,
-        username: this.state.username,
-        birthday: this.state.birthday,
-        password: this.state.password
-      })
-    })
-      .then(async response => {
-        if (!response.ok){
-          const err = await response.json();
-          alert(err.message);
-          this.setState({ name: "" });
-          this.setState({ username: "" });
-          this.setState({ birthday: "" });
-          this.setState({ password: "" });
-        }
-        else{
-          this.props.history.push("/login");
-        }
-      })
-      .catch(err => {
-        if (err.message.match(/Failed to fetch/)) {
-          alert("The server cannot be reached. Did you start it?");
-        } else {
-          alert(`Something went wrong during the login: ${err.message}`);
-        }
-      });
-  }
+    register() {
+        fetch(`${getDomain()}/users`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: this.state.name,
+                username: this.state.username,
+                birthday: this.state.birthday,
+                password: this.state.password
+            })
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(err.message);
+                    this.setState({name: ""});
+                    this.setState({username: ""});
+                    this.setState({birthday: ""});
+                    this.setState({password: ""});
+                } else {
+                    this.props.history.push("/login");
+                }
+            })
+            .catch(err => {
+                if (err.message.match(/Failed to fetch/)) {
+                    alert("The server cannot be reached. Did you start it?");
+                } else {
+                    alert(`Something went wrong during the login: ${err.message}`);
+                }
+            });
+    }
 
-  /**
-   *  Every time the user enters something in the input field, the state gets updated.
-   * @param key (the key of the state for identifying the field that needs to be updated)
-   * @param value (the value that gets assigned to the identified state key)
-   */
-  handleInputChange(key, value) {
-    // Example: if the key is username, this statement is the equivalent to the following one:
-    // this.setState({'username': value});
-    this.setState({ [key]: value });
-  }
+    /**
+     *  Every time the user enters something in the input field, the state gets updated.
+     * @param key (the key of the state for identifying the field that needs to be updated)
+     * @param value (the value that gets assigned to the identified state key)
+     */
+    handleInputChange(key, value) {
+        // Example: if the key is username, this statement is the equivalent to the following one:
+        // this.setState({'username': value});
+        this.setState({[key]: value});
+    }
 
-  /**
-   * componentDidMount() is invoked immediately after a component is mounted (inserted into the tree).
-   * Initialization that requires DOM nodes should go here.
-   * If you need to load data from a remote endpoint, this is a good place to instantiate the network request.
-   * You may call setState() immediately in componentDidMount().
-   * It will trigger an extra rendering, but it will happen before the browser updates the screen.
-   */
-  componentDidMount() {}
+    static isValid(birthday) {
+        const date = new Date(birthday);
+        return date.getFullYear() >= 1000;
+    }
 
-  render() {
-    return (
-      <BaseContainer>
-        <FormContainer>
-          <Form style={{height: "560px"}}>
-            <Title>Create A New User</Title>
-            <Label>Name</Label>
-            <InputField
-                placeholder="Enter here.."
-                onChange={e => {
-                  this.handleInputChange("name", e.target.value);
-                }}
-            />
-            <Label>Username</Label>
-            <InputField
-              placeholder="Enter here.."
-              onChange={e => {
-                this.handleInputChange("username", e.target.value);
-              }}
-            />
-            <Label>Birthday</Label>
-            <InputField
-                type="date"
-                placeholder="Enter here.."
-                onChange={e => {
-                  this.handleInputChange("birthday", e.target.value);
-                }}
-            />
-            <Label>Password</Label>
-            <InputField
-              type="password"
-              placeholder="Enter here.."
-              onChange={e => {
-                this.handleInputChange("password", e.target.value);
-              }}
-            />
-            <ButtonContainer>
-              <Button
-                color="sky"
-                disabled={!this.state.username || !this.state.name ||!this.state.birthday|| !this.state.password}
-                width="100%"
-                onClick={() => {
-                  this.register();
-                }}
-              >
-                Register
-              </Button>
-            </ButtonContainer>
-            <ButtonContainer>
-              <Button
-                width="100%"
-                onClick={() => {
-                  this.goBack();
-                }}
-              >
-                Already have an account?
-              </Button>
-            </ButtonContainer>
-          </Form>
-        </FormContainer>
-      </BaseContainer>
-    );
-  }
+    /**
+     * componentDidMount() is invoked immediately after a component is mounted (inserted into the tree).
+     * Initialization that requires DOM nodes should go here.
+     * If you need to load data from a remote endpoint, this is a good place to instantiate the network request.
+     * You may call setState() immediately in componentDidMount().
+     * It will trigger an extra rendering, but it will happen before the browser updates the screen.
+     */
+    componentDidMount() {
+    }
+
+    render() {
+        return (
+            <BaseContainer>
+                <FormContainer>
+                    <Form style={{height: "560px"}}>
+                        <Title>Create A New User</Title>
+                        <Label>Name</Label>
+                        <InputField
+                            placeholder="Enter here.."
+                            onChange={e => {
+                                this.handleInputChange("name", e.target.value);
+                            }}
+                        />
+                        <Label>Username</Label>
+                        <InputField
+                            placeholder="Enter here.."
+                            onChange={e => {
+                                this.handleInputChange("username", e.target.value);
+                            }}
+                        />
+                        <Label>Birthday</Label>
+                        <InputField
+                            type="date"
+                            placeholder="Enter here.."
+                            onChange={e => {
+                                this.handleInputChange("birthday", e.target.value);
+                            }}
+                        />
+                        <Label>Password</Label>
+                        <InputField
+                            type="password"
+                            placeholder="Enter here.."
+                            onChange={e => {
+                                this.handleInputChange("password", e.target.value);
+                            }}
+                        />
+                        <ButtonContainer>
+                            <Button
+                                disabled={!this.state.username || !this.state.name || !this.state.birthday || !this.state.password}
+                                width="100%"
+                                onClick={() => {
+                                    if (Register.isValid(this.state.birthday)) {
+                                        this.register();
+                                    } else {
+                                        alert("Please choose a valid birthday.")
+                                    }
+                                }}
+                            >
+                                Register
+                            </Button>
+                        </ButtonContainer>
+                        <ButtonContainer>
+                            <Button
+                                width="100%"
+                                color="rgba(0,0,0,0)"
+                                onClick={() => {
+                                    this.goBack();
+                                }}
+                            >
+                                Already have an account?
+                            </Button>
+                        </ButtonContainer>
+                    </Form>
+                </FormContainer>
+            </BaseContainer>
+        );
+    }
 }
 
 /**

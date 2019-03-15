@@ -72,7 +72,11 @@ const ButtonContainer = styled.div`
   margin-top: 20px;
 `;
 
-class UserProfile extends Component {
+const ButtonView = styled.div`
+  margin-top: 75px;
+`;
+
+class UserEdit extends Component {
 
     state = {
         user: "",
@@ -82,19 +86,21 @@ class UserProfile extends Component {
         // canEdit: false
     };
 
+
     componentDidMount() {
         this.fetchUserDate();
     }
 
-    handleCloseModal(successful) {
-        this.setState({showEditDialog: false});
-        if (successful) {
-            this.fetchUserDate();
-        }
-    }
 
     showUser(id) {
         this.props.history.push(`/users/${id}`);
+    }
+
+
+    handleInputChange(key, value) {
+        // Example: if the key is username, this statement is the equivalent to the following one:
+        // this.setState({'username': value});
+        this.setState({ [key]: value });
     }
 
     fetchUserDate() {
@@ -105,52 +111,77 @@ class UserProfile extends Component {
                 "Content-Type": "application/json"
             }
         })
-            .then(async res => {
-                if (!res.ok) {
-                    const error = await res.json();
-                    alert(error.message);
-                    this.props.history.push("/game");
-                } else {
-                    const user = new User(await res.json());
-                    this.setState({user});
+        .then(async res => {
+            if (!res.ok) {
+                const error = await res.json();
+                alert(error.message);
+                this.props.history.push("/game");
+            } else {
+                const user = new User(await res.json());
+                this.setState({user: user});
+                this.setState({username: user.username});
+                this.setState({birthday: this.formatDate(this.state.user.birthday)})
+            }
+        })
+        .catch(err => {
+            if (err.message.match(/Failed to fetch/)) {
+                alert("The server cannot be reached. Did you start it?");
+            } else {
+                alert(`Something went wrong during the login: ${err.message}`);
+            }
+        });
+    }
 
-                    // EDIT
-                    // DataService.postRequest(`/edit`, {
-                    //     id: id,
-                    //     token: localStorage.getItem("token")
-                    // })
-                    //     .then(async res => {
-                    //     if (!res.ok) {
-                    //         const error = await res.json();
-                    //         alert(error.message);
-                    //     } else {
-                    //         this.setState({
-                    //             canEdit: await res.json()
-                    //         });
-                    //     }
-                    // });
-                }
+
+    updateUser() {
+        const {id} = this.props.match.params;
+        fetch(`${getDomain()}/users/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body : JSON.stringify({
+                username: this.state.username,
+                birthday: this.state.birthday
             })
-            .catch(err => {
-                if (err.message.match(/Failed to fetch/)) {
-                    alert("The server cannot be reached. Did you start it?");
-                } else {
-                    alert(`Something went wrong during the login: ${err.message}`);
-                }
-            });
+        })
+        .then(async res => {
+            if (!res.ok) {
+                const error = await res.json();
+                alert(error.message);
+                this.setState({ username: "" });
+                this.setState({ birthday: "" });
+            } else {
+                this.showUser(id);
+            }
+        })
+        .catch(err => {
+            if (err.message.match(/Failed to fetch/)) {
+                alert("The server cannot be reached. Did you start it?");
+            } else {
+                alert(`Something went wrong during the login: ${err.message}`);
+            }
+        });
     }
 
-    static formatDate(dateTime) {
+    formatDate(dateTime) {
         const date = new Date(dateTime);
-        const day = date.getDate();
-        const monthIndex = date.getMonth() + 1; // Index 0 is january
-        const year = date.getFullYear();
+        let day = date.getDate();
+        let monthIndex = date.getMonth() + 1; // Index 0 is january
+        let year = date.getFullYear();
 
-        return `${day}. ${monthIndex}. ${year}`;
+        if (monthIndex<10){
+            monthIndex = '0'+monthIndex;
+        }
+        if (day<10){
+            day = '0'+day;
+        }
+
+        return `${year}-${monthIndex}-${day}`;
     }
-
-    getUser() {
-        return this.state.user;
+    static isValid(birthday) {
+        const date = new Date(birthday);
+        return date.getFullYear() >= 1000;
     }
 
     render() {
@@ -169,34 +200,41 @@ class UserProfile extends Component {
                         />
                         <Label>Birthday</Label>
                         <InputField
+                            value={this.state.birthday}
                             type="date"
                             placeholder="Enter here.."
                             onChange={e => {
                                 this.handleInputChange("birthday", e.target.value);
                             }}
                         />
-                        <ButtonContainer>
-                            <Button
-                                disabled={!this.state.username || !this.state.password}
-                                width="50%"
-                                onClick={() => {
-                                    this.login();
-                                }}
-                            >
-                                Save Changes
-                            </Button>
-                        </ButtonContainer>
-                        <ButtonContainer>
-                            <Button
-                                color="sky"
-                                width="50%"
-                                onClick={() => {
-                                    this.showUser(this.state.user.id);
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                        </ButtonContainer>
+                        <ButtonView>
+                            <ButtonContainer>
+                                <Button
+                                    disabled={!this.state.username || !this.state.birthday}
+                                    width="50%"
+                                    onClick={() => {
+                                        if (UserEdit.isValid(this.state.birthday)) {
+                                            this.updateUser();
+                                        } else {
+                                            alert("Please choose a valid birthday.")
+                                        }
+                                    }}
+                                >
+                                    Save Changes
+                                </Button>
+                            </ButtonContainer>
+                            <ButtonContainer>
+                                <Button
+                                    color="rgb(255,87,51)"
+                                    width="50%"
+                                    onClick={() => {
+                                        this.showUser(this.state.user.id);
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            </ButtonContainer>
+                        </ButtonView>
                     </Form>
                 </FormContainer>
             </BaseContainer>
@@ -204,4 +242,4 @@ class UserProfile extends Component {
     }
 }
 
-export default withRouter(UserProfile);
+export default withRouter(UserEdit);

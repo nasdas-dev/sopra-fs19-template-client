@@ -30,7 +30,7 @@ const Td = styled.td`
     vertical-align: top;
 `;
 const Tr = styled.tr`
-    padding: 8px;
+    padding: 16px;
     line-height: 2;
     text-align: center;
     vertical-align: top;
@@ -52,12 +52,11 @@ const ProfileContainer = styled.div`
   height: 500px;
   font-size: 16px;
   font-weight: 300;
-  padding-top: 40px;
   padding-left: 40px;
   padding-right: 40px;
   border-radius: 5px;
   background: linear-gradient(rgb(27, 124, 186), rgb(2, 46, 101));
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 1.5s ease, transform 0.5s ease;
 `;
 
 const Title = styled.label`
@@ -71,30 +70,24 @@ const Title = styled.label`
 
 class UserProfile extends Component {
     state = {
-        user: ""
-        // showEditDialog: false,
-        // canEdit: false
+        user: "",
+        canEdit: false
     };
 
     componentDidMount() {
-        this.fetchUserDate();
+        this.fetchUserData();
+        this.checkEditPrivilege()
     }
 
-    handleCloseModal(successful) {
-        this.setState({showEditDialog: false});
-        if (successful) {
-            this.fetchUserDate();
-        }
-    }
-
-    dashboard(){
+    dashboard() {
         this.props.history.push("/game/dashboard")
     }
+
     editUser(id) {
         this.props.history.push(`/users/${id}/edit`);
     }
 
-    fetchUserDate() {
+    fetchUserData() {
         const {id} = this.props.match.params;
         fetch(`${getDomain()}/users/${id}`, {
             method: "GET",
@@ -137,6 +130,37 @@ class UserProfile extends Component {
             });
     }
 
+    checkEditPrivilege(){
+        const {id} = this.props.match.params;
+        fetch(`${getDomain()}/users/${id}/edit`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "token" : localStorage.getItem("token")
+            },
+            body: JSON.stringify({
+                id: id
+            })
+        })
+        .then(async res => {
+            if (!res.ok) {
+                const error = await res.json();
+                alert(error.message);
+            } else {
+                this.setState({
+                    canEdit: await res.json()
+                });
+            }
+        })
+        .catch(err => {
+                if (err.message.match(/Failed to fetch/)) {
+                    alert("The server cannot be reached. Did you start it?");
+                } else {
+                    alert(`Something went wrong during the login: ${err.message}`);
+                }
+        });
+    }
+
     static formatDate(dateTime) {
         const date = new Date(dateTime);
         const day = date.getDate();
@@ -153,55 +177,58 @@ class UserProfile extends Component {
 
     render() {
         return (
-            <ProfileContainer>
-                {!this.state.user ? (
-                    <Spinner/>
-                ) : (
-                    <React.Fragment>
-                        <Table>
-                            <tbody>
-                            <Tr>
-                                <Td>
-                                    <Title>
-                                        {this.state.user.username}
-                                    </Title>
-                                </Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Online Status:</Td>
-                                <Td>{this.state.user.status}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Creation Date:</Td>
-                                <Td>{UserProfile.formatDate(this.state.user.creationDate)}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Birthday:</Td>
-                                <Td>{UserProfile.formatDate(this.state.user.birthday)}</Td>
-                            </Tr>
-                            </tbody>
-                        </Table>
-                        <ButtonContainer>
-                            <Button
-                                color="sky"
-                                width="50%"
-                                onClick={() => {
-                                    this.editUser(this.state.user.id);
-                                }}
-                            >
-                                EDIT
-                            </Button>
-                        </ButtonContainer>
-                        <ButtonContainer>
-                            <Button
-                                width="50%"
-                                onClick={() => {
-                                    this.dashboard();
-                                }}
-                            >
-                                Dashboard
-                            </Button>
-                        </ButtonContainer>
+            <BaseContainer>
+                <ProfileContainer>
+                    {!this.state.user ? (
+                        <Spinner/>
+                    ) : (
+                        <React.Fragment>
+                            <Table>
+                                <tbody>
+                                <Tr>
+                                    <Td>
+                                        <Title>
+                                            {this.state.user.username}
+                                        </Title>
+                                    </Td>
+                                </Tr>
+                                <Tr>
+                                    <Td>Online Status:</Td>
+                                    <Td>{this.state.user.status}</Td>
+                                </Tr>
+                                <Tr>
+                                    <Td>Creation Date:</Td>
+                                    <Td>{UserProfile.formatDate(this.state.user.creationDate)}</Td>
+                                </Tr>
+                                <Tr>
+                                    <Td>Birthday:</Td>
+                                    <Td>{UserProfile.formatDate(this.state.user.birthday)}</Td>
+                                </Tr>
+                                </tbody>
+                            </Table>
+                            {this.state.canEdit ? (
+                            <ButtonContainer>
+                                <Button
+                                    color="sky"
+                                    width="50%"
+                                    onClick={() => {
+                                        this.editUser(this.state.user.id);
+                                    }}
+                                >
+                                    EDIT
+                                </Button>
+                            </ButtonContainer>
+                            ) : null}
+                            <ButtonContainer>
+                                <Button
+                                    width="50%"
+                                    onClick={() => {
+                                        this.dashboard();
+                                    }}
+                                >
+                                    Dashboard
+                                </Button>
+                            </ButtonContainer>
 
 
                             {/*{this.state.canEdit ? (
@@ -222,9 +249,10 @@ class UserProfile extends Component {
                                 ) : null}
                             </React.Fragment>
                         ) : null}*/}
-                    </React.Fragment>
-                )}
-            </ProfileContainer>
+                        </React.Fragment>
+                    )}
+                </ProfileContainer>
+            </BaseContainer>
         );
     }
 

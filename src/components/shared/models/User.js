@@ -6,10 +6,10 @@ class User {
     this.id = null;
     this.name = null;
     this.username = null;
+    this.creationDate = null;
+    this.birthday = null;
     this.token = null;
     this.status = null;
-    this.games = null;
-    this.moves = null;
     Object.assign(this, data);
   }
 }
